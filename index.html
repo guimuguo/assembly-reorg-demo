@@ -218,7 +218,7 @@ footer { padding: 24px 0 40px; color: var(--muted); font-size: 12.5px; border-to
 </div>
 
 <section class="block" id="cohortBlock">
-  <h2>Aim 2: does reorganization predict behavior?</h2>
+  <h2>Does reorganization predict behavior?</h2>
   <p>Each point is one simulated rat (17 wild-type, 17 TgF344-AD, as in the published cohort). The devaluation index measures how well the rat stopped responding to the devalued cue. In the published single-neuron analysis, cue responsiveness predicted behavior in wild-type rats but not in AD rats. The design goal of the network measure is to predict behavior in <em>both</em> genotypes.</p>
   <div class="grid2">
     <div class="card" id="scatterCard">
@@ -466,7 +466,7 @@ function drawSpark(vals){
   s.selectAll('circle').data(vals).join('circle').attr('cx',(d,i)=>x(SESSIONS[i].id)).attr('cy',d=>y(d)).attr('r',(d,i)=>i===state.sess?5:3).attr('fill',(d,i)=>i===state.sess?'var(--ink)':'var(--ink-2)');
 }
 
-/* ---------- cohort (Aim 2) ---------- */
+/* ---------- cohort ---------- */
 const R=mulberry32(7);
 const RATS=[];
 for(let i=0;i<17;i++){const ri=Math.min(0.95,Math.max(0.1,0.62+0.16*gauss(R)));RATS.push({id:'WT'+(i+1),g:'WT',ri,di:Math.max(-0.15,Math.min(0.9,0.05+0.65*ri+0.09*gauss(R))),phasic:Math.max(5,30+28*ri+8*gauss(R)),pca:ri*0.6+0.25*gauss(R)});}
