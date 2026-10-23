@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Assembly Reorganization Explorer</title>
+<title>Assembly Reorganization Tracker</title>
 <meta name="description" content="Interactive prototype: measuring prefrontal cell-assembly reorganization as a circuit biomarker of cognitive inflexibility in a rat model of early Alzheimer's disease. Simulated data (Guo Lab and West Lab, Rowan University).">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Assembly Reorganization Explorer">
+<meta property="og:title" content="Assembly Reorganization Tracker">
 <meta property="og:description" content="Prototype of a graph-mining pipeline that follows groups of co-firing prefrontal neurons through learning and outcome devaluation. Simulated data; Rowan University.">
 <meta property="og:url" content="https://guimuguo.github.io/assembly-reorg-demo/">
 <meta property="og:image" content="https://guimuguo.github.io/assembly-reorg-demo/og.png">
@@ -111,6 +111,28 @@ table.tbl th, table.tbl td { text-align: right; padding: 4px 8px; border-bottom:
 table.tbl th:first-child, table.tbl td:first-child { text-align: left; }
 .hidden { display: none; }
 
+.params { display: grid; grid-template-columns: 1fr; gap: 10px; }
+.param { display: grid; grid-template-columns: 170px 1fr 56px; gap: 10px; align-items: center; font-size: 13px; }
+.param .pl { color: var(--ink-2); }
+.param .pv { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.param input[type=range] { width: 100%; accent-color: var(--ink); }
+.deflist { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+.deflist li { display: grid; grid-template-columns: 150px 1fr 60px; gap: 10px; align-items: center; font-size: 12.5px; }
+.deflist .bar { height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+.deflist .bar > i { display: block; height: 100%; background: var(--ink-2); border-radius: 4px; }
+.deflist li.on .bar > i { background: var(--accent); }
+.deflist li.on .dn { font-weight: 600; }
+.deflist .dv { text-align: right; font-variant-numeric: tabular-nums; }
+#cert { width: 100%; height: 230px; display: block; }
+.multis { display: grid; grid-template-columns: repeat(11, 1fr); gap: 6px; }
+.multi { min-width: 0; text-align: center; font-size: 11px; color: var(--ink-2); cursor: pointer; border-radius: 8px; padding: 4px 2px; border: 1px solid transparent; }
+.multi:hover { background: var(--surface-2); }
+.multi.on { border-color: var(--ink); }
+.multi svg { width: 100%; height: 72px; display: block; }
+.stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 14px; }
+.stat { background: var(--surface-2); border-radius: 10px; padding: 10px 12px; }
+.stat .v { font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.stat .l { font-size: 12px; color: var(--ink-2); margin-top: 2px; }
 .pipeline { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
 .step { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px; font-size: 13px; }
 .step .n { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
@@ -131,6 +153,9 @@ footer { padding: 24px 0 40px; color: var(--muted); font-size: 12.5px; border-to
   .grid, .grid2, .team { grid-template-columns: 1fr; }
   .pipeline { grid-template-columns: repeat(2, 1fr); }
   .timeline { grid-template-columns: repeat(6, 1fr); }
+  .multis { grid-template-columns: repeat(6, 1fr); }
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .param { grid-template-columns: 120px 1fr 48px; }
   #net { height: 360px; }
 }
 </style>
@@ -146,7 +171,7 @@ footer { padding: 24px 0 40px; color: var(--muted); font-size: 12.5px; border-to
       <button class="primary" id="tourBtn">Take the 30-second tour</button>
     </div>
   </div>
-  <h1>Assembly Reorganization Explorer</h1>
+  <h1>Assembly Reorganization Tracker</h1>
   <p class="lede">A rat learns that two cues predict two foods. Then one food is made aversive. Do the prefrontal neurons that fired together for that cue <strong>regroup</strong>? This prototype shows how the planned pipeline turns each recording session into a network, finds the cell assemblies inside it, and scores how well they reorganize. <strong>Every number on this page is simulated</strong> to illustrate the workflow; no recordings have been analyzed yet.</p>
 </header>
 
@@ -181,7 +206,7 @@ footer { padding: 24px 0 40px; color: var(--muted); font-size: 12.5px; border-to
       <span><i style="background:var(--a-frag)"></i>Not in a certified assembly</span>
       <span><i class="sq" style="background:var(--axis)"></i>Edge: co-firing above the surrogate null</span>
     </div>
-    <p class="note">Nodes are the units recorded together in one session (about 10 per rat, matching the published dataset). An assembly is a dense subgroup of three or more units (density at least 0.6) that is absent from spike-jittered surrogate networks. The enumeration runs live in your browser on the simulated network.</p>
+    <p class="note">Nodes are the units recorded together in one session (about 10 per rat, matching the published dataset). An assembly is a dense subgroup of units that is rarely reached in spike-jittered surrogate networks; the definition and thresholds are set in the panel below. The enumeration runs live in your browser on the simulated network.</p>
   </div>
   <div class="card" id="metricCard">
     <div class="card-head"><div><h2>Per-animal metrics</h2><p class="sub">Computed from the networks up to the selected session</p></div></div>
@@ -195,6 +220,48 @@ footer { padding: 24px 0 40px; color: var(--muted); font-size: 12.5px; border-to
     <ul class="alist" id="alist"></ul>
   </div>
 </div>
+
+<div class="grid2" id="robustRow">
+  <div class="card" id="paramCard">
+    <div class="card-head"><div><h2>Is the result a choice of parameters?</h2><p class="sub">Move the controls; every network, assembly and metric above is recomputed</p></div></div>
+    <div class="params">
+      <div class="param"><span class="pl">Co-firing window</span><input type="range" id="pWin" min="5" max="40" step="5" value="10"><span class="pv" id="pWinV">10 ms</span></div>
+      <div class="param"><span class="pl">Density threshold</span><input type="range" id="pGam" min="0.5" max="1" step="0.05" value="0.65"><span class="pv" id="pGamV">0.65</span></div>
+      <div class="param"><span class="pl">Minimum assembly size</span><input type="range" id="pMin" min="3" max="5" step="1" value="3"><span class="pv" id="pMinV">3 units</span></div>
+      <div class="param"><span class="pl">Significance level</span><input type="range" id="pAlp" min="0.01" max="0.1" step="0.01" value="0.05"><span class="pv" id="pAlpV">p &lt; 0.05</span></div>
+    </div>
+    <p class="note" style="margin-top:10px"><strong>Assembly definition</strong> (GraphMine runs all of them in one framework and keeps the one that best predicts behavior):</p>
+    <div class="seg" id="defSeg">
+      <button data-v="qc" aria-pressed="true">Quasi-clique</button>
+      <button data-v="truss" aria-pressed="false">k-truss</button>
+      <button data-v="comm" aria-pressed="false">Community</button>
+      <button data-v="recur" aria-pressed="false">Recurring pattern</button>
+    </div>
+    <ul class="deflist" id="deflist"></ul>
+    <p class="note">Bars: cross-validated R² for predicting the devaluation index across the simulated cohort (illustrative values).</p>
+  </div>
+  <div class="card" id="certCard">
+    <div class="card-head"><div><h2>How an assembly is certified</h2><p class="sub" id="certSub"></p></div><div class="right"><button class="ghost" id="reshuffleBtn">Reshuffle surrogates</button></div></div>
+    <svg id="cert" role="img" aria-label="Observed assembly density against surrogate distribution"></svg>
+    <p class="note">Spike times are jittered within the co-firing window to build surrogate networks that keep each unit's firing rate but destroy fine-timescale coordination. A candidate group is kept only if its density is rarely reached in the surrogates. Shown for the first assembly in the current network; 300 surrogates drawn here, 1,000 in the planned analysis.</p>
+  </div>
+</div>
+
+<section class="block" id="scaleBlock">
+  <h2>One animal is one row of a much larger library</h2>
+  <p>The network above is one session of one animal. The analysis repeats it for every session, every task epoch and every animal, and again for every surrogate network and every assembly definition. Its statistical power comes from that library, not from the size of any single network.</p>
+  <div class="card">
+    <div class="card-head"><div><h2 id="multiTitle">All eleven sessions of this animal</h2><p class="sub">Same animal and epoch as selected above; click a thumbnail to open it</p></div></div>
+    <div class="multis" id="multis"></div>
+    <div class="stats">
+      <div class="stat"><div class="v">34</div><div class="l">animals (17 wild-type, 17 TgF344-AD)</div></div>
+      <div class="stat"><div class="v">1,870</div><div class="l">session × epoch networks</div></div>
+      <div class="stat"><div class="v">1.87 M</div><div class="l">surrogate networks (1,000 per network)</div></div>
+      <div class="stat"><div class="v">582</div><div class="l">candidate subgroups tested per 10-unit network</div></div>
+      <div class="stat"><div class="v">4</div><div class="l">assembly definitions compared</div></div>
+    </div>
+  </div>
+</section>
 
 <section class="block" id="cohortBlock">
   <h2>Does reorganization predict behavior?</h2>
@@ -260,6 +327,9 @@ function gauss(r){let u=0,v=0;while(u===0)u=r();while(v===0)v=r();return Math.sq
 const N=10, UNITS=d3.range(N).map(i=>'u'+(i+1));
 const SESSIONS=[...d3.range(1,11).map(d=>({id:'d'+d,label:'Day '+d,day:d})),{id:'test',label:'Test',day:11}];
 const SUC=[0,1,2,3], GRAIN=[4,5,6,7], NEW=[2,8,9];
+const P={win:10,gamma:0.65,minSize:3,alpha:0.05,def:'qc'};
+const DEFN={qc:'Quasi-clique',truss:'k-truss',comm:'Community',recur:'Recurring pattern'};
+const DEFR2={qc:0.46,truss:0.41,comm:0.33,recur:0.44};
 const sig=x=>1/(1+Math.exp(-x));
 function learning(day){return sig((day-4)/1.4);}
 
@@ -299,32 +369,62 @@ function planted(pheno, sess, epoch){
 function buildNet(pheno,sess,epoch){
   const seed=(pheno==='wt'?1:pheno==='rigid'?2:3)*1000+sess.day*10+(epoch==='suc'?1:epoch==='grain'?2:3);
   const r=mulberry32(seed);
-  const {groups,bg}=planted(pheno,sess,epoch);
+  const pl=planted(pheno,sess,epoch); const groups=pl.groups; const bg=Math.min(0.3,pl.bg*Math.sqrt(P.win/10));
   const A=Array.from({length:N},()=>Array(N).fill(0));
   for(let i=0;i<N;i++)for(let j=i+1;j<N;j++){
     let p=bg;
     for(const g of groups){ if(g.members.includes(i)&&g.members.includes(j)) p=Math.max(p,g.p); }
     if(r()<p){A[i][j]=A[j][i]=1;}
   }
-  return {A,groups,seed};
+  return {A,groups,seed,bg};
 }
-/* ---------- live quasi-clique enumeration (gamma = 0.6, size >= 3) ---------- */
+/* ---------- live assembly enumeration (several definitions) ---------- */
 function density(A,S){let e=0;for(let a=0;a<S.length;a++)for(let b=a+1;b<S.length;b++)e+=A[S[a]][S[b]];return e/(S.length*(S.length-1)/2);}
+function edgesIn(A,S){let e=0;for(let a=0;a<S.length;a++)for(let b=a+1;b<S.length;b++)e+=A[S[a]][S[b]];return e;}
 function combos(n,k){const out=[];const c=d3.range(k);while(true){out.push(c.slice());let i=k-1;while(i>=0&&c[i]===n-k+i)i--;if(i<0)break;c[i]++;for(let j=i+1;j<k;j++)c[j]=c[j-1]+1;}return out;}
-function findAssemblies(A){
-  const q=[];
-  const thr={3:0.999,4:0.66,5:0.6};
-  for(let k=5;k>=3;k--) for(const S of combos(N,k)){ const dsy=density(A,S); if(dsy>=thr[k]) q.push({members:S,density:dsy}); }
-  // keep maximal (not a subset of a larger qualifying group)
+function binomTail(n,k,p){let s=0;for(let i=k;i<=n;i++){let c=1;for(let j=0;j<i;j++)c=c*(n-j)/(j+1);s+=c*Math.pow(p,i)*Math.pow(1-p,n-i);}return Math.min(1,s);}
+function pruneMaximal(q){
   const keep=q.filter(x=>!q.some(y=>y.members.length>x.members.length&&x.members.every(m=>y.members.includes(m))));
-  // drop heavy overlaps (same assembly counted twice): keep highest density among groups sharing >= 3 members
   const out=[];
   for(const x of keep.sort((a,b)=>b.density-a.density||b.members.length-a.members.length)){
     if(!out.some(y=>x.members.filter(m=>y.members.includes(m)).length>=3)) out.push(x);
   }
-  // simulated surrogate p-value: larger and denser groups are rarer under the null
-  out.forEach(x=>{x.p=Math.min(0.049,Math.max(0.0005,0.3*Math.exp(-(x.members.length-2)*(x.density*3.2))));});
   return out;
+}
+function certify(A,bg,cands){ // surrogate p-value: probability that a random network with the same edge rate reaches this many edges
+  cands.forEach(x=>{const n=x.members.length*(x.members.length-1)/2;x.p=binomTail(n,edgesIn(A,x.members),bg);});
+  return cands.filter(x=>x.p<P.alpha);
+}
+function quasiCliques(A){
+  const q=[];
+  for(let k=5;k>=P.minSize;k--) for(const S of combos(N,k)){ const dsy=density(A,S); const thr=k===3?0.999:P.gamma; if(dsy>=thr) q.push({members:S,density:dsy}); }
+  return pruneMaximal(q);
+}
+function components(nodes,adj){const seen=new Set(),out=[];for(const v of nodes){if(seen.has(v))continue;const st=[v],comp=[];seen.add(v);while(st.length){const u=st.pop();comp.push(u);for(const w of nodes)if(!seen.has(w)&&adj(u,w)){seen.add(w);st.push(w);}}out.push(comp.sort((a,b)=>a-b));}return out;}
+function kTruss(A){ // k=3: every edge must close at least one triangle
+  const E=Array.from({length:N},()=>Array(N).fill(0));
+  for(let i=0;i<N;i++)for(let j=i+1;j<N;j++)if(A[i][j]){let t=0;for(let k=0;k<N;k++)if(k!==i&&k!==j&&A[i][k]&&A[j][k])t++;if(t>=1)E[i][j]=E[j][i]=1;}
+  const nodes=d3.range(N).filter(i=>E[i].some(v=>v));
+  return components(nodes,(u,w)=>E[u][w]).filter(c=>c.length>=P.minSize&&c.length<=6).map(c=>({members:c,density:density(A,c)}));
+}
+function communities(A){ // greedy modularity merging (CNM) on the small graph, then keep dense groups
+  const deg=A.map(r=>d3.sum(r)),m=d3.sum(deg)/2; if(!m) return [];
+  let comms=d3.range(N).map(i=>[i]);
+  const Q=(c)=>{let e=0,d=0;for(const a of c){d+=deg[a];for(const b of c)if(b>a)e+=A[a][b];}return e/m-(d/(2*m))**2;};
+  while(comms.length>1){let best=null;for(let i=0;i<comms.length;i++)for(let j=i+1;j<comms.length;j++){const gain=Q([...comms[i],...comms[j]])-Q(comms[i])-Q(comms[j]);if(gain>0&&(!best||gain>best.gain))best={i,j,gain};}
+    if(!best)break;const merged=[...comms[best.i],...comms[best.j]].sort((a,b)=>a-b);comms=comms.filter((c,k)=>k!==best.i&&k!==best.j);comms.push(merged);}
+  return comms.filter(c=>c.length>=P.minSize&&c.length<=6&&density(A,c)>=0.5).map(c=>({members:c,density:density(A,c)}));
+}
+function findAssemblies(A,bg,def){
+  const cands=def==='truss'?kTruss(A):def==='comm'?communities(A):quasiCliques(A);
+  return certify(A,bg,cands);
+}
+function applyRecurrence(ph){ // recurring pattern: a certified quasi-clique that also appears (overlap >= 0.5) in a neighbouring session of the same epoch
+  for(const e of EPOCHS){
+    const seq=SESSIONS.map(s=>DB[ph][s.id][e]);
+    seq.forEach((net,i)=>{const nb=[seq[i-1],seq[i+1]].filter(Boolean);
+      net.asm=net.asmQC.filter(a=>nb.some(n=>n.asmQC.some(b=>jaccard(a.members,b.members)>=0.5)));});
+  }
 }
 function tagOf(asm,pheno){ // name by overlap with planted assemblies
   if(pheno==='frag') return 'frag';
@@ -340,8 +440,18 @@ function jaccard(a,b){const s=new Set(a);let inter=0;for(const x of b)if(s.has(x
 
 /* precompute everything */
 const PHENOS=['wt','rigid','frag'], EPOCHS=['suc','grain','out'];
-const DB={};
-for(const ph of PHENOS){DB[ph]={};for(const s of SESSIONS){DB[ph][s.id]={};for(const e of EPOCHS){const net=buildNet(ph,s,e);net.asm=findAssemblies(net.A);net.asm.forEach(a=>a.tag=tagOf(a,ph));DB[ph][s.id][e]=net;}}}
+let DB={};
+function rebuildDB(){
+  DB={};
+  for(const ph of PHENOS){DB[ph]={};for(const s of SESSIONS){DB[ph][s.id]={};for(const e of EPOCHS){const net=buildNet(ph,s,e);
+    net.asmQC=findAssemblies(net.A,net.bg,'qc');
+    net.asm=P.def==='recur'?[]:(P.def==='qc'?net.asmQC:findAssemblies(net.A,net.bg,P.def));
+    DB[ph][s.id][e]=net;}}
+    if(P.def==='recur') applyRecurrence(ph);
+    for(const s of SESSIONS)for(const e of EPOCHS)DB[ph][s.id][e].asm.forEach(a=>a.tag=tagOf(a,ph));
+  }
+}
+rebuildDB();
 
 function metrics(ph,sessIdx){
   const upto=SESSIONS.slice(0,sessIdx+1);
@@ -372,6 +482,50 @@ function metrics(ph,sessIdx){
 const state={pheno:'wt',cue:'suc',sess:9};
 function segInit(id,key,cb){const seg=document.getElementById(id);seg.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{seg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));state[key]=b.dataset.v;cb();}));}
 segInit('phenoSeg','pheno',render); segInit('cueSeg','cue',render);
+segInit('defSeg','def',()=>{P.def=state.def;rebuildDB();render();});
+function bindParam(id,key,fmt,parse){const el=document.getElementById(id),v=document.getElementById(id+'V');el.addEventListener('input',()=>{P[key]=parse(el.value);v.textContent=fmt(P[key]);rebuildDB();render();});}
+bindParam('pWin','win',v=>v+' ms',parseFloat); bindParam('pGam','gamma',v=>v.toFixed(2),parseFloat);
+bindParam('pMin','minSize',v=>v+' units',parseInt); bindParam('pAlp','alpha',v=>'p < '+v.toFixed(2),parseFloat);
+let certSeed=1; document.getElementById('reshuffleBtn').addEventListener('click',()=>{certSeed++;drawCert();});
+function drawDeflist(){const ul=document.getElementById('deflist');ul.innerHTML='';const best=Object.keys(DEFR2).reduce((a,b)=>DEFR2[a]>DEFR2[b]?a:b);
+  for(const k of Object.keys(DEFN)){const li=document.createElement('li');li.className=k===P.def?'on':'';li.innerHTML=`<span class="dn">${DEFN[k]}${k===best?' (retained)':''}</span><span class="bar"><i style="width:${DEFR2[k]/0.6*100}%"></i></span><span class="dv">R² ${DEFR2[k].toFixed(2)}</span>`;ul.appendChild(li);}}
+function drawCert(){
+  const sess=SESSIONS[state.sess]; const cue=(sess.id==='test'&&state.cue==='out')?'suc':state.cue; const net=DB[state.pheno][sess.id][cue];
+  const sv=d3.select('#cert'); sv.selectAll('*').remove();
+  const W=sv.node().clientWidth||500,H=230,mL=40,mR=14,mT=14,mB=36;
+  const a=net.asm[0]||null;
+  const S=a?a.members:(net.groups[0]?net.groups[0].members.slice(0,4):[0,1,2,3]);
+  const pairs=S.length*(S.length-1)/2, obs=edgesIn(net.A,S), r=mulberry32(5000+certSeed*17+state.sess);
+  const sur=d3.range(300).map(()=>{let e=0;for(let i=0;i<pairs;i++)if(r()<net.bg)e++;return e/pairs;});
+  const bins=d3.range(0,pairs+1).map(k=>k/pairs); const counts=bins.map(b=>sur.filter(v=>Math.abs(v-b)<1e-9).length);
+  const x=d3.scaleBand().domain(bins.map(b=>b.toFixed(2))).range([mL,W-mR]).padding(0.15), y=d3.scaleLinear().domain([0,d3.max(counts)||1]).range([H-mB,mT]);
+  sv.append('g').attr('class','axis').attr('transform',`translate(0,${H-mB})`).call(d3.axisBottom(x).tickSize(0)).select('.domain').remove();
+  sv.append('g').attr('class','axis').attr('transform',`translate(${mL},0)`).call(d3.axisLeft(y).ticks(4).tickSize(0)).select('.domain').remove();
+  sv.selectAll('rect').data(bins).join('rect').attr('x',b=>x(b.toFixed(2))).attr('width',x.bandwidth()).attr('y',(b,i)=>y(counts[i])).attr('height',(b,i)=>H-mB-y(counts[i])).attr('rx',3).attr('fill','var(--axis)');
+  const ox=x((obs/pairs).toFixed(2))+x.bandwidth()/2;
+  sv.append('line').attr('x1',ox).attr('x2',ox).attr('y1',mT).attr('y2',H-mB).attr('stroke',a?COLORS[a.tag]:'var(--ink)').attr('stroke-width',2.5);
+  sv.append('text').attr('class','direct').attr('x',Math.min(ox+6,W-150)).attr('y',mT+12).text(`observed density ${(obs/pairs).toFixed(2)}`);
+  sv.append('text').attr('x',(mL+W-mR)/2).attr('y',H-6).attr('text-anchor','middle').style('font-size','12px').style('fill','var(--ink-2)').text('density of the same '+S.length+' units in surrogate networks');
+  const pEmp=sur.filter(v=>v>=obs/pairs-1e-9).length/300;
+  document.getElementById('certSub').textContent=a?`${NAMES[a.tag]} (${S.map(i=>UNITS[i]).join(', ')}): ${obs} of ${pairs} possible edges; surrogates reach this in ${(pEmp*100).toFixed(1)}% of draws (analytic p = ${a.p<0.001?'<0.001':a.p.toFixed(3)})`:`No certified assembly in this network; showing ${S.map(i=>UNITS[i]).join(', ')}: ${obs} of ${pairs} edges, matched or exceeded by ${(pEmp*100).toFixed(0)}% of surrogates`;
+}
+function drawMultis(){
+  const box=document.getElementById('multis'); box.innerHTML='';
+  const cue=state.cue==='out'?'suc':state.cue;
+  document.getElementById('multiTitle').textContent=`All eleven sessions of this animal (${{wt:'wild-type',rigid:'AD rigidity',frag:'AD fragmentation'}[state.pheno]}, ${cue==='suc'?'sucrose':'grain'}-cue epoch)`;
+  SESSIONS.forEach((sess,i)=>{
+    const net=DB[state.pheno][sess.id][cue]; const d=document.createElement('div'); d.className='multi'+(i===state.sess?' on':''); d.title=sess.label;
+    const sv=d3.select(d).append('svg').attr('viewBox','0 0 100 72');
+    const sx=x=>50+x*58, sy=y=>36-y*60;
+    const col=Array(N).fill('var(--a-frag)'); net.asm.forEach(a=>a.members.forEach(m=>col[m]=COLORS[a.tag]));
+    net.asm.forEach(a=>{const pts=a.members.map(m=>[sx(pos[m].x),sy(pos[m].y)]);const h=pts.length>=3?d3.polygonHull(pts):null;if(h)sv.append('path').attr('d','M'+h.join('L')+'Z').attr('fill',COLORS[a.tag]).attr('fill-opacity',.18).attr('stroke',COLORS[a.tag]).attr('stroke-width',10).attr('stroke-opacity',.18).attr('stroke-linejoin','round');});
+    for(let a=0;a<N;a++)for(let b=a+1;b<N;b++)if(net.A[a][b])sv.append('line').attr('x1',sx(pos[a].x)).attr('y1',sy(pos[a].y)).attr('x2',sx(pos[b].x)).attr('y2',sy(pos[b].y)).attr('stroke','var(--axis)').attr('stroke-width',1);
+    for(let a=0;a<N;a++)sv.append('circle').attr('cx',sx(pos[a].x)).attr('cy',sy(pos[a].y)).attr('r',3).attr('fill',col[a]);
+    const lab=document.createElement('div'); lab.textContent=sess.id==='test'?'Test':'Day '+sess.day; d.appendChild(lab);
+    d.addEventListener('click',()=>{state.sess=i;render();window.scrollTo({top:0,behavior:'smooth'});});
+    box.appendChild(d);
+  });
+}
 
 const tlEl=document.getElementById('timeline');
 SESSIONS.forEach((s,i)=>{
@@ -398,7 +552,7 @@ function render(){
   const edges=d3.sum(net.A.flat())/2;
   document.getElementById('netSub').textContent=`${N} units, ${edges} significant edges, ${net.asm.length} certified assembl${net.asm.length===1?'y':'ies'}`+(sess.id==='test'&&state.cue==='suc'?' (the sucrose outcome was devalued before this session)':'');
   const W=svg.node().clientWidth||700, H=svg.node().clientHeight||440;
-  if(sess.id==='test'&&state.cue==='out'){svg.selectAll('*').remove();svg.append('text').attr('x',W/2).attr('y',H/2).attr('text-anchor','middle').style('fill','var(--ink-2)').style('font-size','14px').text('No outcome epoch: the test session runs under extinction (no pellets are delivered).');document.getElementById('netSub').textContent='Select a cue epoch to see the test-day network.';document.getElementById('alist').innerHTML='';const mm=metrics(state.pheno,state.sess);document.getElementById('mForm').textContent=mm.formation;document.getElementById('mBind').textContent=mm.binding.toFixed(2);document.getElementById('mFrag').textContent=mm.frag.toFixed(2);document.getElementById('mReorg').textContent=(mm.reorg>=0?'+':'')+mm.reorg.toFixed(2);document.getElementById('mReorgD').textContent=mm.reorgTxt;drawSpark(mm.perDay);return;}
+  if(sess.id==='test'&&state.cue==='out'){svg.selectAll('*').remove();svg.append('text').attr('x',W/2).attr('y',H/2).attr('text-anchor','middle').style('fill','var(--ink-2)').style('font-size','14px').text('No outcome epoch: the test session runs under extinction (no pellets are delivered).');document.getElementById('netSub').textContent='Select a cue epoch to see the test-day network.';document.getElementById('alist').innerHTML='';const mm=metrics(state.pheno,state.sess);document.getElementById('mForm').textContent=mm.formation;document.getElementById('mBind').textContent=mm.binding.toFixed(2);document.getElementById('mFrag').textContent=mm.frag.toFixed(2);document.getElementById('mReorg').textContent=(mm.reorg>=0?'+':'')+mm.reorg.toFixed(2);document.getElementById('mReorgD').textContent=mm.reorgTxt;drawSpark(mm.perDay);drawCert();drawMultis();drawDeflist();return;}
   const sx=x=>W/2+x*W*0.62, sy=y=>H/2-y*H*0.78;
   svg.selectAll('*').remove();
   const unitColor=Array(N).fill('var(--a-frag)');
@@ -433,6 +587,7 @@ function render(){
   if(!net.asm.length){const li=document.createElement('li');li.innerHTML='<span class="sw" style="background:var(--a-frag)"></span><span class="nm">No certified assembly in this network</span><span class="meta"></span>';ul.appendChild(li);}
   net.asm.forEach(a=>{const li=document.createElement('li');li.innerHTML=`<span class="sw" style="background:${COLORS[a.tag]}"></span><span class="nm">${NAMES[a.tag]} <span class="members">${a.members.map(i=>UNITS[i]).join(', ')}</span></span><span class="meta">density ${a.density.toFixed(2)} · p ${a.p<0.001?'<0.001':a.p.toFixed(3)}</span>`;ul.appendChild(li);});
   drawSpark(m.perDay);
+  drawCert(); drawMultis(); drawDeflist();
 }
 function drawSpark(vals){
   const s=d3.select('#spark');s.selectAll('*').remove();
@@ -500,6 +655,8 @@ const TOUR=[
   {el:'#netCard',t:'One network per session and epoch',p:'About ten recorded units become nodes; significant co-firing becomes edges. Colored hulls are certified assemblies, found live by enumerating dense subgroups.'},
   {el:'#controls',t:'Three animals, one story',p:'Switch to the AD rigidity model: assemblies form but never change after devaluation. Switch to fragmentation: no stable assembly ever forms.'},
   {el:'#metricCard',t:'Four numbers per animal',p:'Formation, cue–outcome binding, reorganization index (test day only) and fragmentation are computed from the networks you just saw.'},
+  {el:'#paramCard',t:'Not a choice of parameters',p:'Widen the co-firing window or lower the density threshold and watch the assemblies and metrics recompute. Four assembly definitions run in the same framework.'},
+  {el:'#scaleBlock',t:'One animal, eleven sessions, one row of the library',p:'The full analysis covers 34 animals, about 1,870 networks and 1.87 million surrogates. Power comes from the library, not from any single network.'},
   {el:'#cohortBlock',t:'Does it predict behavior?',p:'Across 34 simulated rats the network measure tracks flexibility in both genotypes, whereas the single-neuron measure works only in wild-type rats, as in the published data.'},
 ];
 let tourIdx=-1,tourBox=null;

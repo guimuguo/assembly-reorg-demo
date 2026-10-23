@@ -1,4 +1,4 @@
-# Assembly Reorganization Explorer (prototype)
+# Assembly Reorganization Tracker (prototype)
 
 Interactive prototype built for the New Jersey Health Foundation Research Grant
 application *Cell-Assembly Rigidity in Prodromal Alzheimer's Disease: A Circuit
@@ -22,8 +22,11 @@ sparkline and assembly list; Aim 2 cohort scatter (network measure vs. single-ne
 measure, table view) and genotype ROC curves; pipeline, significance and team sections.
 Light and dark themes.
 
-Not yet built (planned): a surrogate-certification panel (observed vs. 1,000 jittered
-networks) and a GraphMine definition-selection panel.
+Also included: a parameter panel (co-firing window, density threshold, minimum size,
+significance level) that recomputes every network and metric; an assembly-definition switch
+(quasi-clique, k-truss, greedy-modularity community, recurring pattern) with illustrative
+behavior-prediction scores; a surrogate-certification histogram for the current assembly;
+and an eleven-session thumbnail strip with the scale of the full analysis.
 
 Single self-contained `index.html` (D3 v7 from cdnjs, no build step). Serve the folder
 with any static server; `og.png` (1200x630 preview image) still to be added.
