@@ -481,7 +481,7 @@ function metrics(ph,sessIdx){
 /* ---------- state and UI ---------- */
 const state={pheno:'wt',cue:'suc',sess:9};
 function segInit(id,key,cb){const seg=document.getElementById(id);seg.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{seg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));state[key]=b.dataset.v;cb();}));}
-segInit('phenoSeg','pheno',render); segInit('cueSeg','cue',render);
+segInit('phenoSeg','pheno',()=>{stopPlay();render();}); segInit('cueSeg','cue',()=>{stopPlay();render();});
 segInit('defSeg','def',()=>{P.def=state.def;rebuildDB();render();});
 function bindParam(id,key,fmt,parse){const el=document.getElementById(id),v=document.getElementById(id+'V');el.addEventListener('input',()=>{P[key]=parse(el.value);v.textContent=fmt(P[key]);rebuildDB();render();});}
 bindParam('pWin','win',v=>v+' ms',parseFloat); bindParam('pGam','gamma',v=>v.toFixed(2),parseFloat);
@@ -522,7 +522,7 @@ function drawMultis(){
     for(let a=0;a<N;a++)for(let b=a+1;b<N;b++)if(net.A[a][b])sv.append('line').attr('x1',sx(pos[a].x)).attr('y1',sy(pos[a].y)).attr('x2',sx(pos[b].x)).attr('y2',sy(pos[b].y)).attr('stroke','var(--axis)').attr('stroke-width',1);
     for(let a=0;a<N;a++)sv.append('circle').attr('cx',sx(pos[a].x)).attr('cy',sy(pos[a].y)).attr('r',3).attr('fill',col[a]);
     const lab=document.createElement('div'); lab.textContent=sess.id==='test'?'Test':'Day '+sess.day; d.appendChild(lab);
-    d.addEventListener('click',()=>{state.sess=i;render();window.scrollTo({top:0,behavior:'smooth'});});
+    d.addEventListener('click',()=>{stopPlay();state.sess=i;render();window.scrollTo({top:0,behavior:'smooth'});});
     box.appendChild(d);
   });
 }
@@ -531,10 +531,12 @@ const tlEl=document.getElementById('timeline');
 SESSIONS.forEach((s,i)=>{
   if(s.id==='test'){const dv=document.createElement('div');dv.className='tl deval';dv.innerHTML='<b>Devalue</b>sucrose + LiCl';tlEl.appendChild(dv);}
   const b=document.createElement('button');b.className='tl';b.innerHTML=`<b>${s.id==='test'?'Test':'Day '+s.day}</b>${s.id==='test'?'extinction':s.day===1?'learning starts':s.day===10?'cues learned':'conditioning'}`;
-  b.addEventListener('click',()=>{state.sess=i;render();});tlEl.appendChild(b);
+  b.addEventListener('click',()=>{stopPlay();state.sess=i;render();});tlEl.appendChild(b);
 });
 let timer=null;
-document.getElementById('playBtn').addEventListener('click',()=>{if(timer){clearInterval(timer);timer=null;setPlay(false);return;}state.sess=0;render();setPlay(true);timer=setInterval(()=>{state.sess++;if(state.sess>=SESSIONS.length){clearInterval(timer);timer=null;state.sess=SESSIONS.length-1;setPlay(false);}render();},900);});
+function stopPlay(){if(timer){clearInterval(timer);timer=null;}setPlay(false);}
+function startPlay(){stopPlay();state.sess=0;render();setPlay(true);timer=setInterval(()=>{state.sess++;if(state.sess>=SESSIONS.length){state.sess=SESSIONS.length-1;stopPlay();}render();},900);}
+document.getElementById('playBtn').addEventListener('click',()=>{if(timer)stopPlay();else startPlay();});
 function setPlay(on){document.getElementById('playBtn').innerHTML=on?'<span class="ico" aria-hidden="true">&#9632;</span> Stop playing the sessions':'<span class="ico" aria-hidden="true">&#9654;</span> Play through the sessions';}
 
 const pos=(()=>{const r=mulberry32(42);const base=[[-.62,.30],[-.34,.46],[-.30,.12],[-.60,.00],[.34,.46],[.62,.30],[.58,.00],[.30,.12],[-.22,-.42],[.04,-.28],[.26,-.42]];return d3.range(N).map(i=>({x:base[i][0]+(r()-.5)*.06,y:base[i][1]+(r()-.5)*.06}));})();
@@ -665,9 +667,10 @@ function tourStep(i){if(tourBox){tourBox.remove();tourBox=null;}document.querySe
   if(i===3){state.pheno='wt';document.querySelectorAll('#phenoSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v==='wt'));state.sess=10;render();}
   tourBox=document.createElement('div');tourBox.className='tour';tourBox.innerHTML=`<h3>${st.t}</h3><p>${st.p}</p><div class="row"><button class="ghost" id="tPrev">Back</button><button class="primary" id="tNext">${i===TOUR.length-1?'Done':'Next'}</button><span class="cnt">${i+1} / ${TOUR.length}</span></div>`;document.body.appendChild(tourBox);
   tourBox.querySelector('#tPrev').onclick=()=>tourStep(i-1);tourBox.querySelector('#tNext').onclick=()=>tourStep(i+1);}
-document.getElementById('tourBtn').addEventListener('click',()=>tourStep(0));
+document.getElementById('tourBtn').addEventListener('click',()=>{stopPlay();tourStep(0);});
 
 render(); drawScatter(); drawRoc();
+if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){setTimeout(()=>{if(!timer&&tourIdx<0)startPlay();},700);}
 window.addEventListener('resize',()=>{render();drawScatter();drawRoc();});
 </script>
 </body>
