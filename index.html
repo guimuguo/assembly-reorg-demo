@@ -165,7 +165,6 @@ footer { padding: 24px 0 40px; color: var(--muted); font-size: 12.5px; border-to
     <span>Guo Lab (Computer Science) and West Lab (Neuroscience), Rowan University</span>
     <div class="toolbar">
       <button class="primary" id="tourBtn">Take the 30-second tour</button>
-      <button class="ghost" id="themeBtn" aria-label="Toggle dark mode">Dark mode</button>
     </div>
   </div>
   <h1>Assembly Reorganization Explorer</h1>
@@ -531,13 +530,6 @@ function tourStep(i){if(tourBox){tourBox.remove();tourBox=null;}document.querySe
   tourBox=document.createElement('div');tourBox.className='tour';tourBox.innerHTML=`<h3>${st.t}</h3><p>${st.p}</p><div class="row"><button class="ghost" id="tPrev">Back</button><button class="primary" id="tNext">${i===TOUR.length-1?'Done':'Next'}</button><span class="cnt">${i+1} / ${TOUR.length}</span></div>`;document.body.appendChild(tourBox);
   tourBox.querySelector('#tPrev').onclick=()=>tourStep(i-1);tourBox.querySelector('#tNext').onclick=()=>tourStep(i+1);}
 document.getElementById('tourBtn').addEventListener('click',()=>tourStep(0));
-
-/* ---------- theme ---------- */
-const themeBtn=document.getElementById('themeBtn');
-function applyTheme(t){if(t)document.documentElement.setAttribute('data-theme',t);else document.documentElement.removeAttribute('data-theme');const dark=t==='dark'||(!t&&matchMedia('(prefers-color-scheme: dark)').matches);themeBtn.textContent=dark?'Light mode':'Dark mode';}
-let theme=null;try{theme=localStorage.getItem('theme');}catch(e){}
-applyTheme(theme);
-themeBtn.addEventListener('click',()=>{const dark=document.documentElement.getAttribute('data-theme')==='dark'||(!document.documentElement.getAttribute('data-theme')&&matchMedia('(prefers-color-scheme: dark)').matches);theme=dark?'light':'dark';try{localStorage.setItem('theme',theme);}catch(e){}applyTheme(theme);});
 
 render(); drawScatter(); drawRoc();
 window.addEventListener('resize',()=>{render();drawScatter();drawRoc();});
