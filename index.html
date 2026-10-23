@@ -66,6 +66,7 @@ h1 { font-size: clamp(24px, 3.4vw, 36px); line-height: 1.15; margin: 10px 0 6px;
 .seg button i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
 .ghost { appearance: none; border: 1px solid var(--border); background: var(--surface); color: var(--ink-2); border-radius: 8px; padding: 6px 10px; font: inherit; font-size: 13px; cursor: pointer; }
 .ghost:hover { color: var(--ink); }
+.ghost .ico { font-size: 10px; margin-right: 2px; }
 .primary { appearance: none; border: 0; background: var(--ink); color: var(--surface); border-radius: 8px; padding: 7px 12px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
 .fgroup { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .fgroup .lbl { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
@@ -186,7 +187,7 @@ footer { padding: 24px 0 40px; color: var(--muted); font-size: 12.5px; border-to
       <button data-v="out" aria-pressed="false">Outcome</button>
     </div>
   </div>
-  <button class="ghost" id="playBtn">Play through the sessions</button>
+  <button class="ghost" id="playBtn"><span class="ico" aria-hidden="true">&#9654;</span> Play through the sessions</button>
 </div>
 
 <div class="timeline" id="timeline"></div>
@@ -401,7 +402,8 @@ SESSIONS.forEach((s,i)=>{
   b.addEventListener('click',()=>{state.sess=i;render();});tlEl.appendChild(b);
 });
 let timer=null;
-document.getElementById('playBtn').addEventListener('click',()=>{if(timer){clearInterval(timer);timer=null;document.getElementById('playBtn').textContent='Play through the sessions';return;}state.sess=0;render();document.getElementById('playBtn').textContent='Stop';timer=setInterval(()=>{state.sess++;if(state.sess>=SESSIONS.length){clearInterval(timer);timer=null;state.sess=SESSIONS.length-1;document.getElementById('playBtn').textContent='Play through the sessions';}render();},900);});
+document.getElementById('playBtn').addEventListener('click',()=>{if(timer){clearInterval(timer);timer=null;setPlay(false);return;}state.sess=0;render();setPlay(true);timer=setInterval(()=>{state.sess++;if(state.sess>=SESSIONS.length){clearInterval(timer);timer=null;state.sess=SESSIONS.length-1;setPlay(false);}render();},900);});
+function setPlay(on){document.getElementById('playBtn').innerHTML=on?'<span class="ico" aria-hidden="true">&#9632;</span> Stop':'<span class="ico" aria-hidden="true">&#9654;</span> Play through the sessions';}
 
 const pos=(()=>{const r=mulberry32(42);const base=[[-.62,.30],[-.34,.46],[-.30,.12],[-.60,.00],[.34,.46],[.62,.30],[.58,.00],[.30,.12],[-.22,-.42],[.04,-.28],[.26,-.42]];return d3.range(N).map(i=>({x:base[i][0]+(r()-.5)*.06,y:base[i][1]+(r()-.5)*.06}));})();
 const svg=d3.select('#net');
